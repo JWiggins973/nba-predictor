@@ -4,9 +4,6 @@ __pycache__/
 venv/
 .venv/
 
-# Large data files
-all_seasons.csv
-
 # Frontend
 node_modules
 dist
