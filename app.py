@@ -41,7 +41,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("CORS_ORIGIN", "http://localhost:5173")],
+    allow_origins=[
+        os.getenv("CORS_ORIGIN", "http://localhost:5173"),
+        "https://jwiggins973.github.io",
+    ],
     allow_methods=["GET"],
     allow_headers=["*"],
 )
