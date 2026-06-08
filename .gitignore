@@ -35,4 +35,11 @@ lerna-debug.log*
 .env.production
 
 # Dev scripts
-validate.py
+scripts/validate.py
+
+# Test cache
+.pytest_cache/
+
+# Frontend env and OS files
+frontend/.env
+frontend/.DS_Store
