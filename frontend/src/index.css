@@ -1,0 +1,47 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0a0c10;
+  color: #e8eaf0;
+  font-family: 'Barlow Condensed', sans-serif;
+  min-height: 100vh;
+}
+
+:root {
+  --bg: #0a0c10;
+  --surface: #13161e;
+  --border: #1e2330;
+  --accent: #f85c2c;
+  --green: #22c55e;
+  --muted: #6b7280;
+  --white: #ffffff;
+  --error: #ef4444;
+  --mono: 'IBM Plex Mono', monospace;
+  --display: 'Barlow Condensed', sans-serif;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+.status {
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.status.error {
+  color: var(--error);
+}

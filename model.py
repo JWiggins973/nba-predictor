@@ -1,0 +1,75 @@
+import joblib
+import pandas as pd
+import numpy as np
+import shap
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from config import PEAK_AGE, LAG_COLS, FEATURES
+from exports import export_all
+
+# Load the dataset
+df = pd.read_csv("csv/all_seasons.csv")
+
+# drop ts_pct outliers
+df = df[(df["ts_pct"] > 0.0) & (df["ts_pct"] <= 1.0)]
+
+# sort by player name and season
+df = df.sort_values(by=["player_name", "season"]).reset_index(drop=True)
+
+# predict next season
+df["next_pts"] = df.groupby("player_name")["pts"].shift(-1)
+
+# age curve
+df["years_from_peak"] = df["age"] - PEAK_AGE
+df["decline_rate"] = df["years_from_peak"] ** 2
+
+# lag features
+for col in LAG_COLS:
+    df[f"lag_{col}"] = df.groupby("player_name")[col].shift(0)
+    df[f"lag1_{col}"] = df.groupby("player_name")[col].shift(1)
+    df[f"lag2_{col}"] = df.groupby("player_name")[col].shift(2)
+
+# save full df before dropna for forecasting
+df_for_forecast = df.copy()
+
+# drop rows with missing values
+df = df.dropna(subset=FEATURES + ["next_pts"])
+print(f"Rows after lag: {len(df)}")
+
+# time-based train/test split
+train = df[df["season"] < "2019-20"]
+test = df[df["season"] >= "2019-20"]
+
+x_train = train[FEATURES]
+y_train = train["next_pts"]
+x_test = test[FEATURES]
+y_test = test["next_pts"]
+
+print(f"Training Rows: {len(x_train)}")
+print(f"Testing Rows: {len(x_test)}")
+
+# train model
+model = RandomForestRegressor(n_estimators=100, random_state=42)
+model.fit(x_train, y_train)
+
+# SHAP
+explainer = shap.TreeExplainer(model)
+shap_values = explainer(x_test)
+
+shap.summary_plot(shap_values, x_test, plot_type="bar", show=False)
+plt.title("SHAP Feature Importance")
+plt.tight_layout()
+plt.savefig("shap_summary_plot.png")
+
+# evaluate
+score = model.score(x_test, y_test)
+print(f"R²: {score:.4f}")
+print("Model trained!")
+
+# save model
+joblib.dump(model, "nba_model.pkl")
+print("Model saved to nba_model.pkl")
+
+# export all files
+export_all(model, df, df_for_forecast, x_test, y_test, shap_values)

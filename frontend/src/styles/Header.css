@@ -1,0 +1,15 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  background: var(--surface);
+  border-radius: 10px;
+}
+
+.header h1 {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--white);
+}

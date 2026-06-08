@@ -1,0 +1,33 @@
+.prediction-title {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.prediction-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prediction-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.prediction-label {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.prediction-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.prediction-value.accent {
+  color: var(--accent);
+  font-size: 28px;
+}
