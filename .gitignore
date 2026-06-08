@@ -4,9 +4,8 @@ __pycache__/
 venv/
 .venv/
 
-# Large model/data files
-*.pkl
-*.csv
+# Large data files
+all_seasons.csv
 
 # Frontend
 node_modules
