@@ -33,7 +33,7 @@ export default defineConfig({
     trace: 'on-first-retry',
 
     /* Run browser in headed mode */
-    headless: false,
+    headless: process.env.CI ? true : false,
   },
 
   /* Configure projects for major browsers */
