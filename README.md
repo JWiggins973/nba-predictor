@@ -7,12 +7,6 @@ Predicts next-season points per game (PPG) for NBA players using a Random Forest
 - **API:** https://nba-predictor-fu6x.onrender.com
 - **Tableau Dashboard:** https://public.tableau.com/views/NBA_Predictor/Dashboard1
 
-## 🐳 Docker
-```bash
-docker pull ghcr.io/jwiggins973/nba-predictor-backend:latest
-docker run -p 8000:8000 ghcr.io/jwiggins973/nba-predictor-backend:latest
-```
-
 ## 🛠 Stack
 - **ML:** Python, Scikit-learn, SHAP, Pandas
 - **Backend:** FastAPI
@@ -41,8 +35,29 @@ npm install
 npm run dev
 ```
 
+## 🐳 Docker
+```bash
+docker pull ghcr.io/jwiggins973/nba-predictor-backend:latest
+docker run -p 8000:8000 ghcr.io/jwiggins973/nba-predictor-backend:latest
+```
+
+## 🧪 Tests
+```bash
+# Backend (after Run Locally setup)
+pytest test_app.py
+
+# End-to-end
+npm install
+npx playwright install --with-deps
+npx playwright test
+```
+
 ## 📊 Model Performance
 - R²: 0.83
 - MAE: 2.22 PPG
 - RMSE: 2.91 PPG
 - Train: 1996-2024 | Test: 2024-25 | Forecast: 2025-26
+
+## 📌 Coming soon
+- AI integration with brief explanation of prediction.
+
