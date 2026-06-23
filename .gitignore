@@ -34,7 +34,7 @@ lerna-debug.log*
 .env.local
 
 # Dev scripts
-scripts/validate.py
+backend/scripts/model/validate.py
 
 # Test cache
 .pytest_cache/
@@ -44,8 +44,8 @@ frontend/.env
 frontend/.DS_Store
 
 # Playwright
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-/playwright/.auth/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+playwright/.auth/

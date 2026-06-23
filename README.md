@@ -2,6 +2,8 @@
 
 Predicts next-season points per game (PPG) for NBA players using a Random Forest model with SHAP explainability.
 
+*I originally built this to learn how to train a model and use FastAPI, but I actually want it to be functional and reusable going forward, so I'll be periodically updating it.*
+
 ## 🔗 Live Links
 - **Frontend:** https://jwiggins973.github.io/nba-predictor/
 - **API:** https://nba-predictor-fu6x.onrender.com
@@ -26,6 +28,7 @@ Predicts next-season points per game (PPG) for NBA players using a Random Forest
 ## 💻 Run Locally
 ```bash
 # Backend
+cd backend
 pip install -r requirements.txt
 uvicorn app:app --reload
 
@@ -44,9 +47,11 @@ docker run -p 8000:8000 ghcr.io/jwiggins973/nba-predictor-backend:latest
 ## 🧪 Tests
 ```bash
 # Backend (after Run Locally setup)
+cd backend
 pytest test_app.py
 
 # End-to-end
+cd e2e
 npm install
 npx playwright install --with-deps
 npx playwright test
