@@ -1,7 +1,8 @@
+import time
 from datetime import datetime
 
 import pandas as pd
-from nba_api.stats.endpoints import leaguedashplayerstats, leaguedashplayerbiostats
+from nba_api.stats.endpoints import leaguedashplayerbiostats
 
 
 # fetch season year
@@ -38,9 +39,19 @@ if is_in_season():
         print("Actuals for the previous season already exist.")
     else:
         # append to  all_seasons.csv
-        bio_stats = leaguedashplayerbiostats.LeagueDashPlayerBioStats(
-            season=previous_season, per_mode_simple="PerGame"
-        )
+        # cloud CI runners can be slow to hear back from stats.nba.com,
+        # so allow a longer timeout and a few retries before giving up
+        for attempt in range(3):
+            try:
+                bio_stats = leaguedashplayerbiostats.LeagueDashPlayerBioStats(
+                    season=previous_season, per_mode_simple="PerGame", timeout=60
+                )
+                break
+            except Exception as e:
+                print(f"Bio stats request failed (attempt {attempt + 1}): {e}")
+                if attempt == 2:
+                    raise
+                time.sleep(5)
         df_bio = bio_stats.get_data_frames()[0]
 
         # convert height from feet-inches string (e.g. "6-6") to centimeters
@@ -64,16 +75,24 @@ if is_in_season():
         print(f"Appended {len(df_bio)} players for {previous_season} to all_seasons.csv")
 
     print("Fetching " + current_season + " actuals...")
-    stats = leaguedashplayerstats.LeagueDashPlayerStats(season=current_season)
+    for attempt in range(3):
+        try:
+            stats = leaguedashplayerbiostats.LeagueDashPlayerBioStats(
+                season=current_season, per_mode_simple="PerGame", timeout=60
+            )
+            break
+        except Exception as e:
+            print(f"Actuals request failed (attempt {attempt + 1}): {e}")
+            if attempt == 2:
+                raise
+            time.sleep(5)
     df = stats.get_data_frames()[0]
 
     # keep only what we need
-    df = df[["PLAYER_NAME", "GP", "PTS", "REB", "AST"]].copy()
-
-    # convert totals to per game
-    df["actual_ppg"] = (df["PTS"] / df["GP"]).round(1)
-    df["actual_rpg"] = (df["REB"] / df["GP"]).round(1)
-    df["actual_apg"] = (df["AST"] / df["GP"]).round(1)
+    df = df[["PLAYER_NAME", "PTS", "REB", "AST"]].copy()
+    df["actual_ppg"] = df["PTS"].round(1)
+    df["actual_rpg"] = df["REB"].round(1)
+    df["actual_apg"] = df["AST"].round(1)
 
     # clean up
     df = df.rename(columns={"PLAYER_NAME": "player_name"})
