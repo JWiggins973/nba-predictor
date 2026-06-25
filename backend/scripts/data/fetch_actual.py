@@ -72,7 +72,9 @@ if is_in_season():
         # append and save
         df1 = pd.concat([df1, df_bio], ignore_index=True)
         df1.to_csv("csv/all_seasons.csv", index=False)
-        print(f"Appended {len(df_bio)} players for {previous_season} to all_seasons.csv")
+        print(
+            f"Appended {len(df_bio)} players for {previous_season} to all_seasons.csv"
+        )
 
     print("Fetching " + current_season + " actuals...")
     for attempt in range(3):

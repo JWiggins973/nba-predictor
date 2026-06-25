@@ -23,3 +23,6 @@ FEATURES = (
     + [f"lag1_{col}" for col in LAG_COLS]
     + [f"lag2_{col}" for col in LAG_COLS]
 )
+
+MAX_TOKENS = 150
+MAX_DAILY_CALLS = 10
