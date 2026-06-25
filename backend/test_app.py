@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
 from app import app
+import app as var
+from config import MAX_DAILY_CALLS
 
 client = TestClient(app)
 
@@ -30,3 +32,35 @@ def test_predict_bad_response():
     response = client.get("/predict/Fake Player")
     assert response.status_code == 404
     print("Test /predict with Fake Player passed!")
+
+
+# Test the explain endpoint with a valid player
+def test_explain_good_response():
+    # response = client.get("/explain/LeBron James")
+    # assert response.status_code == 200
+    # data = response.json()
+    # assert "explanation" in data
+    # print("Test /explain with valid player passed!")
+    pass
+
+
+# Test the explain endpoint with an invalid player
+def test_explain_bad_response():
+    response = client.get("/explain/Fake Player")
+    assert response.status_code == 404
+    print("Test /explain with Fake Player passed!")
+
+
+# Test the API key
+def test_explain_no_key():
+    response = client.get("/explain/LeBron James")
+    assert response.json() == {"explanation": "ANTHROPIC_API_KEY is not set."}
+    print("Test /explain with no API key passed!")
+
+
+# Test the maximum number of calls
+def test_explain_max_calls():
+    var.daily_counter = MAX_DAILY_CALLS
+    response = client.get("/explain/LeBron James")
+    assert response.status_code == 429
+    print("Test /explain with max calls passed!")
