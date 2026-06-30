@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+import os
 
 import pandas as pd
 from nba_api.stats.endpoints import leaguedashplayerbiostats
@@ -29,6 +30,24 @@ def get_previous_season_yr():
     )
 
 
+def fetch_bio_stats(season):
+    for attempt in range(3):
+        try:
+            bio_stats = leaguedashplayerbiostats.LeagueDashPlayerBioStats(
+                season=season,
+                per_mode_simple="PerGame",
+                timeout=60,
+                proxy=os.getenv("NBA_PROXY_URL"),
+            )
+            break
+        except Exception as e:
+            print(f"Bio stats request failed (attempt {attempt + 1}): {e}")
+            if attempt == 2:
+                raise
+            time.sleep(5)
+    return bio_stats
+
+
 if is_in_season():
     current_season = get_current_season_yr()
     previous_season = get_previous_season_yr()
@@ -39,19 +58,7 @@ if is_in_season():
         print("Actuals for the previous season already exist.")
     else:
         # append to  all_seasons.csv
-        # cloud CI runners can be slow to hear back from stats.nba.com,
-        # so allow a longer timeout and a few retries before giving up
-        for attempt in range(3):
-            try:
-                bio_stats = leaguedashplayerbiostats.LeagueDashPlayerBioStats(
-                    season=previous_season, per_mode_simple="PerGame", timeout=60
-                )
-                break
-            except Exception as e:
-                print(f"Bio stats request failed (attempt {attempt + 1}): {e}")
-                if attempt == 2:
-                    raise
-                time.sleep(5)
+        bio_stats = fetch_bio_stats(previous_season)
         df_bio = bio_stats.get_data_frames()[0]
 
         # convert height from feet-inches string (e.g. "6-6") to centimeters
@@ -77,28 +84,47 @@ if is_in_season():
         )
 
     print("Fetching " + current_season + " actuals...")
-    for attempt in range(3):
-        try:
-            stats = leaguedashplayerbiostats.LeagueDashPlayerBioStats(
-                season=current_season, per_mode_simple="PerGame", timeout=60
-            )
-            break
-        except Exception as e:
-            print(f"Actuals request failed (attempt {attempt + 1}): {e}")
-            if attempt == 2:
-                raise
-            time.sleep(5)
+    stats = fetch_bio_stats(current_season)
     df = stats.get_data_frames()[0]
 
     # keep only what we need
-    df = df[["PLAYER_NAME", "PTS", "REB", "AST"]].copy()
+    df = df[
+        [
+            "PLAYER_NAME",
+            "AGE",
+            "PTS",
+            "REB",
+            "AST",
+            "USG_PCT",
+            "TS_PCT",
+            "NET_RATING",
+            "GP",
+        ]
+    ].copy()
+    df["actual_age"] = df["AGE"]
     df["actual_ppg"] = df["PTS"].round(1)
     df["actual_rpg"] = df["REB"].round(1)
     df["actual_apg"] = df["AST"].round(1)
+    df["actual_usg_pct"] = df["USG_PCT"].round(3)
+    df["actual_ts_pct"] = df["TS_PCT"].round(3)
+    df["actual_net_rating"] = df["NET_RATING"].round(3)
+    df["actual_gp"] = df["GP"]
 
     # clean up
     df = df.rename(columns={"PLAYER_NAME": "player_name"})
-    df = df[["player_name", "actual_ppg", "actual_rpg", "actual_apg"]]
+    df = df[
+        [
+            "player_name",
+            "actual_age",
+            "actual_ppg",
+            "actual_rpg",
+            "actual_apg",
+            "actual_usg_pct",
+            "actual_ts_pct",
+            "actual_net_rating",
+            "actual_gp",
+        ]
+    ]
 
     # save
     df.to_csv("csv/actuals.csv", index=False)

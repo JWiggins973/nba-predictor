@@ -1,3 +1,4 @@
+from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 from app import app
 import app as var
@@ -24,6 +25,12 @@ def test_predict_good_response():
     assert "predicted_ppg" in data
     assert "last_season" in data
     assert "actual_ppg" in data
+    assert "last_season_stats" in data
+    assert "last_season_stats_1" in data
+    assert "last_season_stats_2" in data
+    assert "actual_stats" in data
+    assert "top_shap_values" in data
+    assert len(data["top_shap_values"]) == 3
     print("Test /predict with valid player passed!")
 
 
@@ -35,13 +42,22 @@ def test_predict_bad_response():
 
 
 # Test the explain endpoint with a valid player
-def test_explain_good_response():
-    # response = client.get("/explain/LeBron James")
-    # assert response.status_code == 200
-    # data = response.json()
-    # assert "explanation" in data
-    # print("Test /explain with valid player passed!")
-    pass
+def test_explain_good_response(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "fake-key-for-test")
+
+    fake_response = MagicMock()
+    fake_response.text = "fake explanation"
+
+    with patch("app.genai.Client") as mock_client_class:
+        mock_client_class.return_value.models.generate_content.return_value = (
+            fake_response
+        )
+        response = client.get("/explain/Stephen Curry")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data == {"explanation": "fake explanation"}
+    print("Test /explain with valid player passed!")
 
 
 # Test the explain endpoint with an invalid player
@@ -52,9 +68,10 @@ def test_explain_bad_response():
 
 
 # Test the API key
-def test_explain_no_key():
+def test_explain_no_key(monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     response = client.get("/explain/LeBron James")
-    assert response.json() == {"explanation": "ANTHROPIC_API_KEY is not set."}
+    assert response.json() == {"explanation": "GEMINI_API_KEY is not set."}
     print("Test /explain with no API key passed!")
 
 

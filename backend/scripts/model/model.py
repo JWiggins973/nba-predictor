@@ -1,3 +1,11 @@
+import os
+import sys
+
+backend_dir = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
+sys.path.insert(0, backend_dir)
+
 import joblib
 import pandas as pd
 import numpy as np
@@ -22,7 +30,7 @@ df["next_pts"] = df.groupby("player_name")["pts"].shift(-1)
 
 # age curve
 df["years_from_peak"] = df["age"] - PEAK_AGE
-df["decline_rate"] = df["years_from_peak"] ** 2
+df["decline_rate"] = df["years_from_peak"].apply(lambda x: -(x**2) if x < 0 else x**2)
 
 # lag features
 for col in LAG_COLS:
@@ -70,6 +78,8 @@ print("Model trained!")
 # save model
 joblib.dump(model, "nba_model.pkl")
 print("Model saved to nba_model.pkl")
+joblib.dump(explainer, "nba_explainer.pkl")
+print("Explainer saved to nba_explainer.pkl")
 
 # export all files
 export_all(model, df, df_for_forecast, x_test, y_test, shap_values)
