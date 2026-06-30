@@ -1,4 +1,5 @@
 import '../styles/PredictionPanel.css'
+import ReactMarkdown from 'react-markdown'
 
 
 function PredictionPanel({ onExplain, player, explained }) {
@@ -22,7 +23,11 @@ function PredictionPanel({ onExplain, player, explained }) {
 
           </button>
         )}  
-        {explained && <p className="prediction-explanation">{explained}</p>}
+        {explained && (
+          <div className="prediction-explanation">
+            <ReactMarkdown>{explained}</ReactMarkdown>
+          </div>
+        )}
       </div>
     </div>
   )
