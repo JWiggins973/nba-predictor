@@ -19,7 +19,13 @@ def clean_name(name):
     for c in text:
         if c.isalnum() or c.isspace():
             cleaned += c
-    return " ".join(cleaned.split())
+
+        words = cleaned.split()
+        filtered_words = []
+        for word in words:
+            if word.lower() not in ["jr", "sr", "iii", "ii", "iv"]:
+                filtered_words.append(word)
+    return " ".join(filtered_words)
 
 
 # Function to check if a name has accents
@@ -27,6 +33,14 @@ def has_accent(name):
     text = strip_accents(name)
     if text != name:
         return True
+    return False
+
+
+def has_suffix(name):
+    suffixes = ["jr", "sr", "jr.", "sr.", "iii", "ii", "iv"]
+    for suffix in suffixes:
+        if name.lower().endswith(suffix):
+            return True
     return False
 
 
@@ -44,6 +58,13 @@ rename_map = {}
 for name, players in collisions.items():
     accent_name = None
     correct_name = None
+    suffix_name = None
+
+    group_rows = df[df["player_name"].isin(players)]
+    draft_years = group_rows["draft_year"].dropna().unique()
+    if len(draft_years) > 1:
+        continue
+
     # check if any player has an accent
     for player in players:
 
@@ -51,13 +72,20 @@ for name, players in collisions.items():
             # use the accent version
             accent_name = player
 
-    if accent_name is None:
+        if has_suffix(player):
+            # use the version with the suffix
+            suffix_name = player
+
+    if accent_name is None and suffix_name is None:
         for p in players:
             if "." not in p:
                 correct_name = p
 
     if accent_name is not None:
         correct_name = accent_name
+
+    if suffix_name is not None:
+        correct_name = suffix_name
 
     # Every spelling in this group besides the chosen one maps to it
     for player in players:

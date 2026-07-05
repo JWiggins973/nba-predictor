@@ -90,6 +90,7 @@ if is_in_season():
     # keep only what we need
     df = df[
         [
+            "PLAYER_ID",
             "PLAYER_NAME",
             "AGE",
             "PTS",
@@ -101,6 +102,7 @@ if is_in_season():
             "GP",
         ]
     ].copy()
+    df["player_id"] = df["PLAYER_ID"]
     df["actual_age"] = df["AGE"]
     df["actual_ppg"] = df["PTS"].round(1)
     df["actual_rpg"] = df["REB"].round(1)
@@ -114,6 +116,7 @@ if is_in_season():
     df = df.rename(columns={"PLAYER_NAME": "player_name"})
     df = df[
         [
+            "player_id",
             "player_name",
             "actual_age",
             "actual_ppg",
