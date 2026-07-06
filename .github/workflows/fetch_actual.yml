@@ -5,9 +5,6 @@ on:
     - cron: "0 12 * 1-6,10-12 *"
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -28,10 +25,4 @@ jobs:
         run: python scripts/data/fetch_actual.py
         env:
           NBA_PROXY_URL: ${{ secrets.NBA_PROXY_URL }}
-      - name: Commit and push if changed
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add backend/csv/actuals.csv backend/csv/all_seasons.csv
-          git diff --staged --quiet || git commit -m "Update actuals and season data"
-          git push
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

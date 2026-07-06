@@ -1,9 +1,35 @@
+import os
 import time
 from datetime import datetime
-import os
-
+from sqlalchemy import create_engine, text
+import numpy as np
 import pandas as pd
 from nba_api.stats.endpoints import leaguedashplayerbiostats
+
+ALLSEASON_COLUMNS = [
+    "player_name",
+    "team_abbreviation",
+    "age",
+    "player_height",
+    "player_weight",
+    "college",
+    "country",
+    "draft_year",
+    "draft_round",
+    "draft_number",
+    "gp",
+    "pts",
+    "reb",
+    "ast",
+    "net_rating",
+    "oreb_pct",
+    "dreb_pct",
+    "usg_pct",
+    "ts_pct",
+    "ast_pct",
+    "season",
+    "player_id",
+]
 
 
 # fetch season year
@@ -52,12 +78,19 @@ if is_in_season():
     current_season = get_current_season_yr()
     previous_season = get_previous_season_yr()
 
-    # check if previous yr in actual so can append
-    df1 = pd.read_csv("csv/all_seasons.csv")
-    if previous_season in df1["season"].values:
+    # check if previous yr in allseason so can append
+    engine = create_engine(os.getenv("DATABASE_URL"))
+    with engine.connect() as conn:
+        results = conn.execute(
+            text("SELECT 1 FROM allseason WHERE season = :season LIMIT 1"),
+            {"season": previous_season},
+        )
+        already_exists = results.first() is not None
+
+    if already_exists:
         print("Actuals for the previous season already exist.")
     else:
-        # append to  all_seasons.csv
+        # append to allseason rows
         bio_stats = fetch_bio_stats(previous_season)
         df_bio = bio_stats.get_data_frames()[0]
 
@@ -70,18 +103,19 @@ if is_in_season():
         # convert weight from pounds to kilograms
         df_bio["PLAYER_WEIGHT"] = df_bio["PLAYER_WEIGHT"].astype(float) * 0.453592
 
-        # rename columns to match all_seasons.csv's schema (every nba_api
-        # column name is just the uppercase version of our column name)
+        # keep only what we need
         df_bio.columns = df_bio.columns.str.lower()
         df_bio["season"] = previous_season
-        df_bio = df_bio[df1.columns]
 
-        # append and save
-        df1 = pd.concat([df1, df_bio], ignore_index=True)
-        df1.to_csv("csv/all_seasons.csv", index=False)
-        print(
-            f"Appended {len(df_bio)} players for {previous_season} to all_seasons.csv"
-        )
+        df_bio["draft_year"] = pd.to_numeric(df_bio["draft_year"], errors="coerce")
+        df_bio = df_bio.replace(
+            {np.nan: None}
+        )  # Replace NaN with real None for SQL insertion
+        df_bio = df_bio[ALLSEASON_COLUMNS]
+
+        with engine.begin() as conn:
+            df_bio.to_sql("allseason", conn, if_exists="append", index=False)
+        print(f"Appended {len(df_bio)} players from {previous_season}")
 
     print("Fetching " + current_season + " actuals...")
     stats = fetch_bio_stats(current_season)
@@ -101,36 +135,24 @@ if is_in_season():
             "NET_RATING",
             "GP",
         ]
-    ].copy()
-    df["player_id"] = df["PLAYER_ID"]
-    df["actual_age"] = df["AGE"]
-    df["actual_ppg"] = df["PTS"].round(1)
-    df["actual_rpg"] = df["REB"].round(1)
-    df["actual_apg"] = df["AST"].round(1)
-    df["actual_usg_pct"] = df["USG_PCT"].round(3)
-    df["actual_ts_pct"] = df["TS_PCT"].round(3)
-    df["actual_net_rating"] = df["NET_RATING"].round(3)
-    df["actual_gp"] = df["GP"]
+    ].rename(
+        columns={
+            "PLAYER_ID": "player_id",
+            "PLAYER_NAME": "player_name",
+            "AGE": "actual_age",
+            "PTS": "actual_ppg",
+            "REB": "actual_rpg",
+            "AST": "actual_apg",
+            "USG_PCT": "actual_usg_pct",
+            "TS_PCT": "actual_ts_pct",
+            "NET_RATING": "actual_net_rating",
+            "GP": "actual_gp",
+        }
+    )
 
-    # clean up
-    df = df.rename(columns={"PLAYER_NAME": "player_name"})
-    df = df[
-        [
-            "player_id",
-            "player_name",
-            "actual_age",
-            "actual_ppg",
-            "actual_rpg",
-            "actual_apg",
-            "actual_usg_pct",
-            "actual_ts_pct",
-            "actual_net_rating",
-            "actual_gp",
-        ]
-    ]
-
-    # save
-    df.to_csv("csv/actuals.csv", index=False)
-    print(f"Saved {len(df)} players to csv/actuals.csv")
-else:
-    print("Not in a season to fetch actuals.")
+    # save to database
+    with engine.begin() as conn:
+        conn.execute(text("TRUNCATE TABLE actuals;"))
+        df.to_sql("actuals", conn, if_exists="append", index=False)
+    engine.dispose()
+    print(f"Saved {len(df)} players to actuals table in database.")

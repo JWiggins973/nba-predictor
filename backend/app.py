@@ -1,4 +1,5 @@
 import os
+from sqlalchemy import create_engine
 import joblib
 import pandas as pd
 from contextlib import asynccontextmanager
@@ -150,7 +151,13 @@ async def lifespan(app: FastAPI):
     global model, df, df_actuals, explainer
     model = joblib.load("nba_model.pkl")
     explainer = joblib.load("nba_explainer.pkl")
-    df = pd.read_csv("csv/all_seasons.csv")
+
+    # open connection and read into pandas DataFrames
+    engine = create_engine(os.getenv("DATABASE_URL"))
+    df = pd.read_sql("SELECT * FROM allseason", engine)
+    df_actuals = pd.read_sql("SELECT * FROM actuals", engine)
+    engine.dispose()
+
     df = df.sort_values(by=["player_name", "season"])
 
     # compute age curve columns so they're ready for prediction
@@ -158,7 +165,6 @@ async def lifespan(app: FastAPI):
     df["decline_rate"] = df["years_from_peak"].apply(
         lambda x: -(x**2) if x < 0 else x**2
     )
-    df_actuals = pd.read_csv("csv/actuals.csv")
     yield
 
 
