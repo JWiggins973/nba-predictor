@@ -5,12 +5,17 @@ on:
     - cron: "0 12 * 1-6,10-12 *"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
       - name: Set up Python 3.14
         uses: actions/setup-python@v3
         with:
@@ -26,3 +31,10 @@ jobs:
         env:
           NBA_PROXY_URL: ${{ secrets.NBA_PROXY_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - name: Commit and push retrained model
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backend/nba_model.pkl backend/nba_explainer.pkl
+          git diff --staged --quiet || git commit -m "Retrain model on updated season data"
+          git push

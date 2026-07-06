@@ -5,6 +5,10 @@ from sqlalchemy import create_engine, text
 import numpy as np
 import pandas as pd
 from nba_api.stats.endpoints import leaguedashplayerbiostats
+from dotenv import load_dotenv
+import subprocess
+
+load_dotenv()
 
 ALLSEASON_COLUMNS = [
     "player_name",
@@ -117,6 +121,9 @@ if is_in_season():
             df_bio.to_sql("allseason", conn, if_exists="append", index=False)
         print(f"Appended {len(df_bio)} players from {previous_season}")
 
+        print("Retraining model with updated data...")
+        subprocess.run(["python", "scripts/model/model.py"], check=True)
+
     print("Fetching " + current_season + " actuals...")
     stats = fetch_bio_stats(current_season)
     df = stats.get_data_frames()[0]
@@ -156,3 +163,6 @@ if is_in_season():
         df.to_sql("actuals", conn, if_exists="append", index=False)
     engine.dispose()
     print(f"Saved {len(df)} players to actuals table in database.")
+
+else:
+    print("Not in a season to fetch")

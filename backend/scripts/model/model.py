@@ -1,5 +1,9 @@
 import os
 import sys
+from sqlalchemy import create_engine
+from dotenv import load_dotenv
+
+load_dotenv()
 
 backend_dir = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -16,8 +20,10 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from config import PEAK_AGE, LAG_COLS, FEATURES
 from exports import export_all
 
-# Load the dataset
-df = pd.read_csv("csv/all_seasons.csv")
+# Load the data
+engine = create_engine(os.getenv("DATABASE_URL"))
+df = pd.read_sql("SELECT * FROM allseason", engine)
+engine.dispose()
 
 # drop ts_pct outliers
 df = df[(df["ts_pct"] > 0.0) & (df["ts_pct"] <= 1.0)]
