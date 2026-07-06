@@ -35,3 +35,5 @@ jobs:
       working-directory: backend
       run: |
         pytest test_app.py
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
