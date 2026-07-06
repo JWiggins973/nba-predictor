@@ -45,6 +45,8 @@ npm install
 npm run dev
 ```
 
+Once both are set up once (deps installed, `.env` created), `./dev.sh` from the repo root starts both together and stops both on Ctrl+C (twice).
+
 ## 🐳 Docker
 ```bash
 docker pull ghcr.io/jwiggins973/nba-predictor-backend:latest
