@@ -74,5 +74,5 @@ npx playwright test
 
 ## 📌 Coming soon
 - Switch `app.py` from loading full tables into memory at startup to per-request Postgres queries
-- Phase 2: per-game player stat prediction model
+- Phase 2 per-game player stat prediction model
 
