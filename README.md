@@ -27,8 +27,8 @@ Predicts next-season points per game (PPG) for NBA players, now with an LLM-powe
 5. Once a player's actual next-season stats are in, Gemini explains the gap between predicted and actual PPG in plain language
 6. React frontend displays results with career scoring chart
 7. Tableau dashboard visualizes predicted vs actual PPG with SHAP feature importance
-8. A daily GitHub Actions cron job (during the NBA season) pulls fresh stats and writes them straight to Postgres
-9. Once a year, when a new season's data lands, that same job retrains the model on the updated data and redeploys it automatically
+8. A scheduled local script (`update_actuals.sh`, weekly) pulls fresh stats from the NBA API and writes them straight to Postgres (NBA blocks GitHub-hosted runners, so this runs on my machine)
+9. Once a year, when a new season's data lands, that same script retrains the model on the updated data; I commit the new model files and the push redeploys the app
 
 ## 💻 Run Locally
 ```bash
